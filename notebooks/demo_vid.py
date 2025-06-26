@@ -103,6 +103,7 @@ frame_idx = 0
 plt.figure(figsize=(9, 6))
 plt.title(f"frame {frame_idx}")
 plt.imshow(Image.open(os.path.join(video_dir, frame_names[frame_idx])))
+plt.show()
 
 
 
@@ -163,6 +164,7 @@ plt.title(f"frame {ann_frame_idx}")
 plt.imshow(Image.open(os.path.join(video_dir, frame_names[ann_frame_idx])))
 show_points(points, labels, plt.gca())
 show_mask((out_mask_logits[0] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_ids[0])
+plt.show()
 
 
 
@@ -196,6 +198,7 @@ plt.title(f"frame {ann_frame_idx}")
 plt.imshow(Image.open(os.path.join(video_dir, frame_names[ann_frame_idx])))
 show_points(points, labels, plt.gca())
 show_mask((out_mask_logits[0] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_ids[0])
+plt.show()
 
 # With this 2nd refinement click, now we get a segmentation mask of the entire child on frame 0.
 
@@ -214,7 +217,7 @@ for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
     }
 
 # render the segmentation results every few frames
-vis_frame_stride = 30
+vis_frame_stride = 50
 plt.close("all")
 for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.figure(figsize=(6, 4))
@@ -222,6 +225,7 @@ for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.imshow(Image.open(os.path.join(video_dir, frame_names[out_frame_idx])))
     for out_obj_id, out_mask in video_segments[out_frame_idx].items():
         show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
+    plt.show()
 
 
 
@@ -239,6 +243,7 @@ plt.figure(figsize=(9, 6))
 plt.title(f"frame {ann_frame_idx} -- before refinement")
 plt.imshow(Image.open(os.path.join(video_dir, frame_names[ann_frame_idx])))
 show_mask(video_segments[ann_frame_idx][ann_obj_id], plt.gca(), obj_id=ann_obj_id)
+plt.show()
 
 # Let's add a negative click on this frame at (x, y) = (82, 415) to refine the segment
 points = np.array([[82, 410]], dtype=np.float32)
@@ -258,6 +263,7 @@ plt.title(f"frame {ann_frame_idx} -- after refinement")
 plt.imshow(Image.open(os.path.join(video_dir, frame_names[ann_frame_idx])))
 show_points(points, labels, plt.gca())
 show_mask((out_mask_logits > 0.0).cpu().numpy(), plt.gca(), obj_id=ann_obj_id)
+plt.show()
 
 
 
@@ -274,7 +280,7 @@ for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
     }
 
 # render the segmentation results every few frames
-vis_frame_stride = 30
+vis_frame_stride = 50
 plt.close("all")
 for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.figure(figsize=(6, 4))
@@ -282,6 +288,7 @@ for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.imshow(Image.open(os.path.join(video_dir, frame_names[out_frame_idx])))
     for out_obj_id, out_mask in video_segments[out_frame_idx].items():
         show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
+    plt.show()
 
 # The segments now look good on all frames.
 
@@ -319,6 +326,7 @@ plt.title(f"frame {ann_frame_idx}")
 plt.imshow(Image.open(os.path.join(video_dir, frame_names[ann_frame_idx])))
 show_box(box, plt.gca())
 show_mask((out_mask_logits[0] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_ids[0])
+plt.show()
 
 # Here, SAM 2 gets a pretty good segmentation mask of the entire child, even though the input bounding box is not perfectly tight around the object.
 
@@ -352,7 +360,7 @@ plt.imshow(Image.open(os.path.join(video_dir, frame_names[ann_frame_idx])))
 show_box(box, plt.gca())
 show_points(points, labels, plt.gca())
 show_mask((out_mask_logits[0] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_ids[0])
-
+plt.show()
 # Then, to get the masklet throughout the entire video, we propagate the prompts using the `propagate_in_video` API.
 
 # run propagation throughout the video and collect the results in a dict
@@ -364,7 +372,7 @@ for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
     }
 
 # render the segmentation results every few frames
-vis_frame_stride = 30
+vis_frame_stride = 50
 plt.close("all")
 for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.figure(figsize=(6, 4))
@@ -372,6 +380,7 @@ for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.imshow(Image.open(os.path.join(video_dir, frame_names[out_frame_idx])))
     for out_obj_id, out_mask in video_segments[out_frame_idx].items():
         show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
+    plt.show()
 
 # Note that in addition to clicks or boxes, SAM 2 also supports directly using a **mask prompt** as input via the `add_new_mask` method in the `SAM2VideoPredictor` class. This can be helpful in e.g. semi-supervised VOS evaluations (see [tools/vos_inference.py](https://github.com/facebookresearch/sam2/blob/main/tools/vos_inference.py) for an example).
 
@@ -425,6 +434,7 @@ show_points(points, labels, plt.gca())
 for i, out_obj_id in enumerate(out_obj_ids):
     show_points(*prompts[out_obj_id], plt.gca())
     show_mask((out_mask_logits[i] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_id)
+plt.show()
 
 # Hmm, this time we just want to select the child's shirt, but the model predicts the mask for the entire child. Let's refine the prediction with a **negative click** at (x, y) = (275, 175).
 
@@ -454,6 +464,7 @@ show_points(points, labels, plt.gca())
 for i, out_obj_id in enumerate(out_obj_ids):
     show_points(*prompts[out_obj_id], plt.gca())
     show_mask((out_mask_logits[i] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_id)
+plt.show()
 
 # After the 2nd negative click, now we get the left child's shirt as our first object.
 
@@ -488,6 +499,7 @@ show_points(points, labels, plt.gca())
 for i, out_obj_id in enumerate(out_obj_ids):
     show_points(*prompts[out_obj_id], plt.gca())
     show_mask((out_mask_logits[i] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_id)
+plt.show()
 
 # This time the model predicts the mask of the shirt we want to track in just one click. Nice!
 
@@ -508,7 +520,7 @@ for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
     }
 
 # render the segmentation results every few frames
-vis_frame_stride = 30
+vis_frame_stride = 50
 plt.close("all")
 for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.figure(figsize=(6, 4))
@@ -516,6 +528,7 @@ for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
     plt.imshow(Image.open(os.path.join(video_dir, frame_names[out_frame_idx])))
     for out_obj_id, out_mask in video_segments[out_frame_idx].items():
         show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
+    plt.show()
 
 # Looks like both children's shirts are well segmented in this video.
 
