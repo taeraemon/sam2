@@ -23,6 +23,7 @@ if torch.cuda.is_available():
         torch.backends.cudnn.allow_tf32 = True
 else:
     print("No GPU available")
+    exit()
 
 np.random.seed(3)
 
