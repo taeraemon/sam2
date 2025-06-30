@@ -108,7 +108,7 @@ inference_state = predictor.init_state(video_path=video_dir)
 
 
 # ------------------------------------------------------------------------------------------------
-### Example 2: Segment an object using box prompt
+# Add a box prompt
 # ------------------------------------------------------------------------------------------------
 
 # Note: if you have run any previous tracking using this `inference_state`, please reset it first via `reset_state`.
@@ -138,51 +138,171 @@ plt.show()
 # Then, to get the masklet throughout the entire video, we propagate the prompts using the `propagate_in_video` API.
 
 
-
+# ------------------------------------------------------------------------------------------------
 # run propagation throughout the video and collect the results in a dict
-video_segments = {}  # video_segments contains the per-frame segmentation results
+# ------------------------------------------------------------------------------------------------
+
+video_segments = {}
+video_logits = {}  # logits 저장용
+
 for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(inference_state):
     video_segments[out_frame_idx] = {
         out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
         for i, out_obj_id in enumerate(out_obj_ids)
     }
+    video_logits[out_frame_idx] = out_mask_logits  # tensor list 그대로 저장!
 
 
 
+
+
+# ------------------------------------------------------------------------------------------------
 # Render the segmentation results in real-time
+# ------------------------------------------------------------------------------------------------
+
 import cv2
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
 
 for frame_idx in range(len(frame_names)):
     # 원본 프레임 로딩
     frame_path = os.path.join(video_dir, frame_names[frame_idx])
-    frame = cv2.imread(frame_path)
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame_orig = cv2.imread(frame_path)
+    frame_rgb = cv2.cvtColor(frame_orig.copy(), cv2.COLOR_BGR2RGB)
+    frame_masked = frame_rgb.copy()
 
+    # 마스크 입히기
     if frame_idx in video_segments:
         for out_obj_id, out_mask in video_segments[frame_idx].items():
-            color = (0, 255, 0)
-            alpha = 0.4
-
-            # ✅ 안전한 마스크: 2D, uint8, 값 0 또는 255
             mask = (out_mask > 0).astype(np.uint8) * 255
-            mask = np.squeeze(mask)  # 혹시라도 (H, W, 1)일 경우 대비
-
+            mask = np.squeeze(mask)
             if np.count_nonzero(mask) == 0:
-                continue  # 마스크가 비어있으면 contour 생략
-
+                continue
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            overlay = frame.copy()
-            cv2.drawContours(overlay, contours, -1, color, thickness=cv2.FILLED)
-            frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+            overlay = frame_masked.copy()
+            cv2.drawContours(overlay, contours, -1, (0, 255, 0), thickness=cv2.FILLED)
+            frame_masked = cv2.addWeighted(overlay, 0.4, frame_masked, 0.6, 0)
 
-    # 화면에 표시
-    cv2.imshow("SAM2 Segmentation", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-    key = cv2.waitKey(30)  # 30ms 대기 → 약 33fps
+    # 로짓 heatmap 생성
+    frame_logit = frame_rgb.copy()
+    if frame_idx in video_logits:
+        logits = video_logits[frame_idx]
+        logit_tensor = logits[0]
+        if isinstance(logit_tensor, torch.Tensor):
+            logit_tensor = logit_tensor.detach().unsqueeze(0)
+        else:
+            logit_tensor = torch.tensor(logit_tensor).unsqueeze(0).unsqueeze(0)
 
-    if key == 27:  # ESC key to break
+        logit_up = F.interpolate(
+            logit_tensor,
+            size=frame_logit.shape[:2],
+            mode='bilinear',
+            align_corners=False
+        )[0, 0].cpu().numpy()
+
+        logit_norm = (logit_up - logit_up.min()) / (logit_up.max() - logit_up.min() + 1e-6)
+        heatmap = (plt.cm.jet(logit_norm)[:, :, :3] * 255).astype(np.uint8)
+        heatmap = cv2.resize(heatmap, (frame_logit.shape[1], frame_logit.shape[0]))
+        frame_logit = cv2.addWeighted(heatmap, 0.5, frame_logit, 0.5, 0)
+
+    # 두 이미지 좌우로 이어붙이기
+    frame_combined = np.hstack([
+        cv2.cvtColor(frame_masked, cv2.COLOR_RGB2BGR),
+        cv2.cvtColor(frame_logit, cv2.COLOR_RGB2BGR)
+    ])
+
+    # 출력
+    cv2.imshow("SAM2: Segmentation vs Logits", frame_combined)
+    key = cv2.waitKey(30)
+    if key == 27:  # ESC
         break
 
 cv2.destroyAllWindows()
+
+
+
+
+
+# ------------------------------------------------------------------------------------------------  
+# Render the segmentation results in real-time
+# ------------------------------------------------------------------------------------------------
+
+# import cv2
+
+# for frame_idx in range(len(frame_names)):
+#     # 원본 프레임 로딩
+#     frame_path = os.path.join(video_dir, frame_names[frame_idx])
+#     frame = cv2.imread(frame_path)
+#     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+#     if frame_idx in video_segments:
+#         for out_obj_id, out_mask in video_segments[frame_idx].items():
+#             color = (0, 255, 0)
+#             alpha = 0.4
+
+#             # ✅ 안전한 마스크: 2D, uint8, 값 0 또는 255
+#             mask = (out_mask > 0).astype(np.uint8) * 255
+#             mask = np.squeeze(mask)  # 혹시라도 (H, W, 1)일 경우 대비
+
+#             if np.count_nonzero(mask) == 0:
+#                 continue  # 마스크가 비어있으면 contour 생략
+
+#             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#             overlay = frame.copy()
+#             cv2.drawContours(overlay, contours, -1, color, thickness=cv2.FILLED)
+#             frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+
+#     # 화면에 표시
+#     cv2.imshow("SAM2 Segmentation", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+#     key = cv2.waitKey(30)  # 30ms 대기 → 약 33fps
+
+#     if key == 27:  # ESC key to break
+#         break
+
+# cv2.destroyAllWindows()
+
+
+
+
+
+# ------------------------------------------------------------------------------------------------
+# Logit Heatmap
+# ------------------------------------------------------------------------------------------------
+
+# import torch.nn.functional as F
+
+# for frame_idx in range(len(frame_names)):
+#     frame_path = os.path.join(video_dir, frame_names[frame_idx])
+#     frame = cv2.imread(frame_path)
+#     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+#     if frame_idx in video_logits:
+#         logits = video_logits[frame_idx]
+#         logit_tensor = logits[0]
+
+#         if isinstance(logit_tensor, torch.Tensor):
+#             logit_tensor = logit_tensor.detach().unsqueeze(0)  # ✅ 여기!
+#         else:
+#             logit_tensor = torch.tensor(logit_tensor).unsqueeze(0).unsqueeze(0)
+
+#         logit_up = F.interpolate(
+#             logit_tensor,  # shape: (1, 1, H, W)
+#             size=frame.shape[:2],
+#             mode='bilinear',
+#             align_corners=False
+#         )[0, 0].cpu().numpy()
+
+#         logit_norm = (logit_up - logit_up.min()) / (logit_up.max() - logit_up.min() + 1e-6)
+#         heatmap = (plt.cm.jet(logit_norm)[:, :, :3] * 255).astype(np.uint8)
+#         heatmap = cv2.resize(heatmap, (frame.shape[1], frame.shape[0]))
+#         frame = cv2.addWeighted(heatmap, 0.5, frame, 0.5, 0)
+
+#     cv2.imshow("Logit Heatmap", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+#     key = cv2.waitKey(30)
+#     if key == 27:
+#         break
+
+# cv2.destroyAllWindows()
 
 
 
