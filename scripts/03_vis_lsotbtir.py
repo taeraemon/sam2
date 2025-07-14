@@ -64,8 +64,7 @@ class VOTEval():
 
         full_tracker_to_evaluate = {
             "LSOTB-TIR": {
-                # "SAM2.1": ["SAM2.1-T", "SAM2.1-S", "SAM2.1-B", "SAM2.1-L"],
-                "SAM2.1": ["SAM2.1-T", "SAM2.1-B"],
+                "SAM2.1": ["SAM2.1-T", "SAM2.1-S", "SAM2.1-B", "SAM2.1-L"],
             }
         }
         tracker_to_evaluate = full_tracker_to_evaluate[dataset_name]
