@@ -12,3 +12,12 @@ demo/backend/checkpoints/*.pt
 
 # tykim, ignore env from venv
 env/
+
+# tykim, ignore results
+results/
+
+# tykim, ignore visualization
+visualization/
+
+# tykim, ignore evaluation results
+evaluation_results/
