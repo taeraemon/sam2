@@ -17,6 +17,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 0 \
 --device cuda:0 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name tiny
 
 python3 scripts/02_eval_lsotbtir_chunk.py \
@@ -24,6 +25,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 1 \
 --device cuda:1 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name tiny
 
 
@@ -33,6 +35,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 0 \
 --device cuda:0 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name small
 
 python3 scripts/02_eval_lsotbtir_chunk.py \
@@ -40,6 +43,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 1 \
 --device cuda:1 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name small
 
 
@@ -49,6 +53,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 0 \
 --device cuda:0 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name base_plus
 
 python3 scripts/02_eval_lsotbtir_chunk.py \
@@ -56,6 +61,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 1 \
 --device cuda:1 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name base_plus
 
 
@@ -65,6 +71,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 0 \
 --device cuda:0 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name large
 
 python3 scripts/02_eval_lsotbtir_chunk.py \
@@ -72,6 +79,7 @@ python3 scripts/02_eval_lsotbtir_chunk.py \
 --chunk_idx 1 \
 --device cuda:1 \
 --exp_name sam2.1_TIR \
+--save_to_video \
 --model_name large
 
 
